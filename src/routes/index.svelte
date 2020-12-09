@@ -1,9 +1,21 @@
 <script>
-	import successkid from 'images/successkid.jpg';
+	import successkid from "images/successkid.jpg";
 </script>
 
 <style>
-	h1, figure, p {
+	section .row {
+		color: #666666;
+		font-size: 13px;
+		padding: 10px 0;
+		border-bottom: 0.1px solid #eeeeee;
+		margin: 10px auto;
+		display: grid;
+		grid-template-columns: 2fr 0.8fr;
+	}
+
+	h1,
+	figure,
+	p {
 		text-align: center;
 		margin: 0 auto;
 	}
@@ -13,6 +25,12 @@
 		text-transform: uppercase;
 		font-weight: 700;
 		margin: 0 0 0.5em 0;
+	}
+
+	h3 {
+		color: #666666;
+		font-size: 13px;
+		font-weight: bold;
 	}
 
 	figure {
@@ -37,14 +55,53 @@
 </style>
 
 <svelte:head>
-	<title>Sapper project template</title>
+	<title>Service Tool Prototype</title>
 </svelte:head>
 
-<h1>Great success!</h1>
+<section>
+	<h3>General</h3>
+	<br />
 
-<figure>
+	<div class="row">
+		<div>Serial</div>
+		<div>16784958</div>
+	</div>
+
+	<div class="row">
+		<div>Base Address</div>
+		<div>50</div>
+	</div>
+</section>
+
+<br />
+<br />
+
+<section>
+	<h3>Board Details</h3>
+	<br />
+
+	<div class="row">
+		<div>PCB Type</div>
+		<div>T750 Annunciator</div>
+	</div>
+
+	<div class="row">
+		<div>Software Version</div>
+		<div>4.5</div>
+	</div>
+
+	<div class="row">
+		<div>Software Checksum</div>
+		<div>0x567CF9</div>
+	</div>
+
+	<div class="row">
+		<div>Software Date</div>
+		<div>11/05/2020</div>
+	</div>
+</section>
+
+<!-- <figure>
 	<img alt="Success Kid" src="{successkid}">
 	<figcaption>Have fun with Sapper!</figcaption>
-</figure>
-
-<p><strong>Try editing this file (src/routes/index.svelte) to test live reloading.</strong></p>
+</figure> -->

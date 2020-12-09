@@ -8,7 +8,7 @@
 
 <style>
 	nav {
-		background: #fff3ef;
+		background: #f3f3f3;
 	}
 	nav div {
 		max-width: 960px;
@@ -20,8 +20,9 @@
 	}
 	h1 {
 		margin-top: 10px;
-		font-size: 22px;
-		font-weight: bold;
+		font-size: 16px;
+		font-weight: 700;
+		color: #4d4d4d;
 	}
 	ul {
 		padding: 0;
@@ -35,9 +36,15 @@
 		text-decoration: none;
 		padding: 1em 0.5em;
 		display: block;
+		color: #4d4d4d;
+		opacity: 50%;
+		font-weight: 700;
+		font-size: 14px;
 	}
 	a.current {
-		border-bottom: 3px solid #ff3e00;
+		
+		color: #38beef;
+		opacity: 100%;
 	}
 </style>
 
@@ -46,9 +53,12 @@
 		<h1 on:click={handleClick}>Service Tool</h1>
 
 		<ul>
-			<li><a class:current={segment === undefined} href=".">home</a></li>
+			<li><a class:current={segment === undefined} href=".">Setup</a></li>
+
 			<li>
-				<a class:current={segment === 'about'} href="about">about</a>
+				<a
+					class:current={segment === 'service'}
+					href="service">Service</a>
 			</li>
 
 			<!-- for the blog link, we're using rel=prefetch so that Sapper prefetches
@@ -56,8 +66,8 @@
 			<li>
 				<a
 					rel="prefetch"
-					class:current={segment === 'blog'}
-					href="blog">blog</a>
+					class:current={segment === 'reports'}
+					href="reports">Reports</a>
 			</li>
 		</ul>
 	</div>
