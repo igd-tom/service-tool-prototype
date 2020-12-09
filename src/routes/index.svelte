@@ -1,5 +1,8 @@
 <script>
 	import successkid from "images/successkid.jpg";
+	import Nested from "../components/Nested.svelte";
+	import Content from "../components/modal/Content.svelte";
+	import Modal from "svelte-simple-modal";
 </script>
 
 <style>
@@ -57,6 +60,12 @@
 <svelte:head>
 	<title>Service Tool Prototype</title>
 </svelte:head>
+
+<Modal>
+	<Content />
+</Modal>
+
+<Nested />
 
 <section>
 	<h3>General</h3>
