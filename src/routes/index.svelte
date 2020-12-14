@@ -1,17 +1,34 @@
 <script>
 	import successkid from "images/successkid.jpg";
 	import Nested from "../components/Nested.svelte";
-	import Content from "../components/modal/Content.svelte";
-	import Modal from "svelte-simple-modal";
+	import Modal from "../components/Modal.svelte";
+	import GeneralForm from "../components/GeneralForm.svelte";
+
+	let displayModal = false;
+	let modalType = "general";
+
+	let closeModal = () => {
+		displayModal = false;
+	};
+
+	let showModal = (arg) => {
+		displayModal = true;
+		modalType = arg;
+	};
 </script>
 
 <style>
+	section {
+		cursor: pointer;
+		padding: 10px;
+	}
+
 	section .row {
 		color: #666666;
 		font-size: 13px;
-		padding: 10px 0;
+		padding: 10px 0px;
 		border-bottom: 0.1px solid #eeeeee;
-		margin: 10px auto;
+		margin: 10px 0;
 		display: grid;
 		grid-template-columns: 2fr 0.8fr;
 	}
@@ -61,13 +78,20 @@
 	<title>Service Tool Prototype</title>
 </svelte:head>
 
-<Modal>
-	<Content />
+<Modal
+	showModal={displayModal}
+	on:click={() => {
+		closeModal();
+	}}>
+	{#if modalType == 'general'}
+		<GeneralForm />
+	{/if}
 </Modal>
 
-<Nested />
-
-<section>
+<section
+	on:click={() => {
+		showModal('general');
+	}}>
 	<h3>General</h3>
 	<br />
 

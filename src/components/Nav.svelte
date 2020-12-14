@@ -9,6 +9,7 @@
 <style>
 	nav {
 		background: #f3f3f3;
+		padding: 10px;
 	}
 	nav div {
 		max-width: 960px;
@@ -42,7 +43,6 @@
 		font-size: 14px;
 	}
 	a.current {
-		
 		color: #38beef;
 		opacity: 100%;
 	}
