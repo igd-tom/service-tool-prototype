@@ -4,4 +4,7 @@
 
 <h1>Service</h1>
 
-<p>This is the 'service' page. There's not much here.</p>
+<p>
+	This is the 'service' page. There's not much here. But it does have some
+	changes!
+</p>

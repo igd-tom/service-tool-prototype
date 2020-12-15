@@ -1,6 +1,8 @@
 <script>
-    let serial;
-    let baseAddr;
+    
+
+    export let serial;
+    export let baseAddr;
 
     const handleSubmit = () => {
         console.log(serial);

@@ -3,9 +3,19 @@
 	import Nested from "../components/Nested.svelte";
 	import Modal from "../components/Modal.svelte";
 	import GeneralForm from "../components/GeneralForm.svelte";
+	import { init, rd } from "../components/TwoWireComms.js";
+	import { onMount } from "svelte";
 
+	let serial;
+	let baseAddr;
 	let displayModal = false;
 	let modalType = "general";
+
+	onMount(() => {
+		baseAddr = 5;
+		init();
+		serial = rd.settings.serial();
+	});
 
 	let closeModal = () => {
 		displayModal = false;
@@ -84,7 +94,7 @@
 		closeModal();
 	}}>
 	{#if modalType == 'general'}
-		<GeneralForm />
+		<GeneralForm {serial} {baseAddr} />
 	{/if}
 </Modal>
 
@@ -97,12 +107,12 @@
 
 	<div class="row">
 		<div>Serial</div>
-		<div>16784958</div>
+		<div>{serial}</div>
 	</div>
 
 	<div class="row">
 		<div>Base Address</div>
-		<div>50</div>
+		<div>{baseAddr}</div>
 	</div>
 </section>
 
