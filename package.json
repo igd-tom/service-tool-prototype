@@ -1,16 +1,18 @@
 {
-  "name": "TODO",
-  "description": "TODO",
+  "name": "service-tool-prototype",
+  "description": "Service tool that supports interfacing to 2-wire annunciator",
   "version": "0.0.1",
   "scripts": {
     "dev": "sapper dev",
     "build": "sapper build --legacy",
-    "export": "sapper export --legacy",
-    "start": "node __sapper__/build"
+    "export": "sapper export --basepath service-tool-prototype --legacy",
+    "start": "node __sapper__/build",
+    "deploy": "npm run export && node ./scripts/gh-pages.js"
   },
   "dependencies": {
     "compression": "^1.7.1",
-    "polka": "next",
+    "gh-pages": "^3.1.0",
+    "polka": "^0.5.2",
     "sirv": "^1.0.0"
   },
   "devDependencies": {

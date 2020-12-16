@@ -12,7 +12,7 @@ function uuidv4() {
 
 // websocket logic
 
-var gateway = "ws://localhost:8080";
+var gateway = "wss://192.168.20.46:8080";
 var websocket;
 
 
@@ -110,9 +110,11 @@ const twHandler = {
 
         // returns promise
         return new Promise((resolve, reject) => {
-            this.queuedMsgs.push({
+            setTimeout(this.queuedMsgs.push({
                 id: uuidv4(), timestamp: -1, msg: msg, success: (resp) => { resolve(resp) }, fail: (e) => { reject(e) }
-            })
+            }), 20);
+
+
 
             // sends next message
             this.sendNextMsg();
@@ -171,7 +173,7 @@ const rd = {
     settings: {
         serial: async function (arg) {
 
-            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": arg.addr, "cmd": 21, "d1": 7, "d2": 0, "d3": 0, "d4": 0 });
+            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 200, "addr": arg.addr, "cmd": 21, "d1": 7, "d2": 0, "d3": 0, "d4": 0 });
 
             if (res.twResCode != 0) {
                 throw "Invalid tw resp: ", res;
@@ -182,7 +184,7 @@ const rd = {
 
         baseSettings: async function (arg) {
 
-            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": arg.addr, "cmd": 21, "d1": 25, "d2": 0, "d3": 0, "d4": 0 });
+            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 200, "addr": arg.addr, "cmd": 21, "d1": 25, "d2": 0, "d3": 0, "d4": 0 });
 
             if (res.twResCode != 0) {
                 throw "Invalid tw resp: ", res;
@@ -198,7 +200,7 @@ const rd = {
 
         pcbType: async function (arg) {
 
-            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": arg.addr, "cmd": 21, "d1": 37, "d2": 0, "d3": 0, "d4": 0 });
+            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 200, "addr": arg.addr, "cmd": 21, "d1": 37, "d2": 0, "d3": 0, "d4": 0 });
 
             if (res.twResCode != 0) {
                 throw "Invalid tw resp: ", res;
@@ -215,7 +217,7 @@ const rd = {
 
     version: {
         program: async function (arg) {
-            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": arg.addr, "cmd": 20, "d1": 1, "d2": 0, "d3": 0, "d4": 0 });
+            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 200, "addr": arg.addr, "cmd": 20, "d1": 1, "d2": 0, "d3": 0, "d4": 0 });
             if (res.twResCode != 0) {
                 throw "Invalid tw resp: ", res;
             }
@@ -226,7 +228,7 @@ const rd = {
         },
 
         programDate: async function (arg) {
-            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": arg.addr, "cmd": 20, "d1": 4, "d2": 0, "d3": 0, "d4": 0 });
+            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 200, "addr": arg.addr, "cmd": 20, "d1": 4, "d2": 0, "d3": 0, "d4": 0 });
             if (res.twResCode != 0) {
                 throw "Invalid tw resp: ", res;
             }
