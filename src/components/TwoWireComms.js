@@ -1,3 +1,6 @@
+import * as TwHelper from "./TwoWireHelper"
+
+
 
 function uuidv4() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -5,6 +8,43 @@ function uuidv4() {
         return v.toString(16);
     });
 }
+
+
+// websocket logic
+
+var gateway = "ws://localhost:8080";
+var websocket;
+
+
+function onWsClose(event) {
+    console.log('Connection closed');
+    setTimeout(initWebSocket, 2000);
+}
+
+function onMsg(evnt) {
+    twHandler.onMsgArrived(evnt);
+}
+
+
+function initWs() {
+    console.log('Trying to open a WebSocket connection...');
+    websocket = new WebSocket(gateway);
+    // websocket.onopen = onWsOpen;
+    websocket.onclose = onWsClose;
+    websocket.onmessage = onMsg;
+
+
+    // returns promise
+    return new Promise((resolve, reject) => {
+        websocket.onopen = (evnt) => {
+            resolve(evnt);
+        }
+    })
+}
+
+
+
+
 
 
 
@@ -113,7 +153,7 @@ const twHandler = {
 
 
 
-export { init, rd };
+
 
 
 
@@ -122,19 +162,6 @@ export { init, rd };
 // tw comms 
 
 
-function convert3BytesToUint24(n1, n2, n3) {
-
-    let nReturn = 0;
-    let nTemp;
-
-    nReturn |= (n3 << 16);
-    nTemp = n2;
-    nTemp = (nTemp << 8) & 0x00FF00;
-    nReturn |= nTemp;
-    nReturn |= (n1 & 0x0000FF);
-
-    return nReturn;
-}
 
 
 
@@ -142,18 +169,113 @@ function convert3BytesToUint24(n1, n2, n3) {
 
 const rd = {
     settings: {
-        serial: async function () {
+        serial: async function (arg) {
 
-            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": 255, "cmd": 21, "d1": 7, "d2": 0, "d3": 0, "d4": 0 });
+            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": arg.addr, "cmd": 21, "d1": 7, "d2": 0, "d3": 0, "d4": 0 });
 
             if (res.twResCode != 0) {
                 throw "Invalid tw resp: ", res;
             }
 
-            return convert3BytesToUint24(res.payload.d1, res.payload.d2, res.payload.d3)
-        }
+            return TwHelper.convert3BytesToUint24(res.payload.d1, res.payload.d2, res.payload.d3)
+        },
+
+        baseSettings: async function (arg) {
+
+            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": arg.addr, "cmd": 21, "d1": 25, "d2": 0, "d3": 0, "d4": 0 });
+
+            if (res.twResCode != 0) {
+                throw "Invalid tw resp: ", res;
+            }
+
+            return {
+                baseAddr: res.payload.d1,
+                channelIndex: res.payload.d2,
+                totalChannels: res.payload.d3
+            }
+        },
+
+
+        pcbType: async function (arg) {
+
+            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": arg.addr, "cmd": 21, "d1": 37, "d2": 0, "d3": 0, "d4": 0 });
+
+            if (res.twResCode != 0) {
+                throw "Invalid tw resp: ", res;
+            }
+
+            return {
+                pcbType: TwHelper.pcbTypeToString(res.payload.d1),
+                addr: res.payload.d2,
+                cable: res.payload.d3
+            }
+        },
+    },
+
+
+    version: {
+        program: async function (arg) {
+            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": arg.addr, "cmd": 20, "d1": 1, "d2": 0, "d3": 0, "d4": 0 });
+            if (res.twResCode != 0) {
+                throw "Invalid tw resp: ", res;
+            }
+            return {
+                version: TwHelper.convert2BytesToUint16(res.payload.d1, res.payload.d2) / 1000,
+                checksum: `0x${TwHelper.convert2BytesToUint16(res.payload.d3, res.payload.d4).toString(16).toUpperCase()}`
+            }
+        },
+
+        programDate: async function (arg) {
+            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": arg.addr, "cmd": 20, "d1": 4, "d2": 0, "d3": 0, "d4": 0 });
+            if (res.twResCode != 0) {
+                throw "Invalid tw resp: ", res;
+            }
+
+            return new Date(res.payload.d3 + 2000, res.payload.d2 - 1, res.payload.d1).toLocaleDateString();
+
+        },
+
+
+
+
     }
-};
+
+
+}
+
+
+
+const wr = {
+    settings: {
+        serial: async function (arg) {
+
+            let arr = TwHelper.convertUint24To3Bytes(arg.serial);
+
+
+            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": arg.addr, "cmd": 121, "d1": 7, "d2": arr[0], "d3": arr[1], "d4": arr[2] });
+
+            if (res.twResCode != 0) {
+                throw "Invalid tw resp: ", res;
+            }
+
+            return;
+        },
+
+        baseSettings: async function (arg) {
+
+
+            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": arg.addr, "cmd": 121, "d1": 25, "d2": arg.baseAddr, "d3": arg.channelIndex, "d4": arg.totalChannels });
+
+            if (res.twResCode != 0) {
+                throw "Invalid tw resp: ", res;
+            }
+
+            return;
+        },
+
+    }
+}
+
 
 
 async function init() {
@@ -166,41 +288,9 @@ async function init() {
 
 
 
-// websocket logic
-
-var gateway = "ws://localhost:8080";
-var websocket;
-
-
-function onWsClose(event) {
-    console.log('Connection closed');
-    setTimeout(initWebSocket, 2000);
-}
-
-function onMsg(evnt) {
-    twHandler.onMsgArrived(evnt);
-}
-
-
-function initWs() {
-    console.log('Trying to open a WebSocket connection...');
-    websocket = new WebSocket(gateway);
-    // websocket.onopen = onWsOpen;
-    websocket.onclose = onWsClose;
-    websocket.onmessage = onMsg;
-
-
-    // returns promise
-    return new Promise((resolve, reject) => {
-        websocket.onopen = (evnt) => {
-            resolve(evnt);
-        }
-    })
-}
 
 
 
 
 
-
-
+export { init, rd, wr };

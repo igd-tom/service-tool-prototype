@@ -6,24 +6,45 @@
 	import { init, rd } from "../components/TwoWireComms.js";
 	import { onMount } from "svelte";
 
-	let serial;
-	let baseAddr;
-	let displayModal = false;
-	let modalType = "general";
+	import { store } from "../components/stores.js";
+
+	let __pcbType = "";
+
+	let __version = "";
+	let __checksum = "";
+	let __swDate = "";
+
+	let __displayModal = false;
+	let __modalType = "general";
 
 	onMount(async () => {
-		baseAddr = 5;
 		await init();
-		serial = await rd.settings.serial();
+		let serial = await rd.settings.serial({ addr: 255 });
+		store.setSerial(serial);
+
+		let baseSettings = await rd.settings.baseSettings({ addr: 255 });
+		store.setBaseAddr(baseSettings.baseAddr);
+		store.setChannelIndex(baseSettings.channelIndex);
+		store.setTotalChannels(baseSettings.totalChannels);
+
+		let pcbType = await rd.settings.pcbType({ addr: 255 });
+		__pcbType = pcbType.pcbType;
+
+		let program = await rd.version.program({ addr: 255 });
+		__version = program.version;
+		__checksum = program.checksum;
+
+		let progDate = await rd.version.programDate({ addr: 255 });
+		__swDate = progDate;
 	});
 
 	let closeModal = () => {
-		displayModal = false;
+		__displayModal = false;
 	};
 
 	let showModal = (arg) => {
-		displayModal = true;
-		modalType = arg;
+		__displayModal = true;
+		__modalType = arg;
 	};
 </script>
 
@@ -89,12 +110,12 @@
 </svelte:head>
 
 <Modal
-	showModal={displayModal}
+	showModal={__displayModal}
 	on:click={() => {
 		closeModal();
 	}}>
-	{#if modalType == 'general'}
-		<GeneralForm {serial} {baseAddr} />
+	{#if __modalType == 'general'}
+		<GeneralForm {closeModal} />
 	{/if}
 </Modal>
 
@@ -107,12 +128,12 @@
 
 	<div class="row">
 		<div>Serial</div>
-		<div>{serial}</div>
+		<div>{$store.serial}</div>
 	</div>
 
 	<div class="row">
 		<div>Base Address</div>
-		<div>{baseAddr}</div>
+		<div>{$store.baseAddr}</div>
 	</div>
 </section>
 
@@ -125,24 +146,26 @@
 
 	<div class="row">
 		<div>PCB Type</div>
-		<div>T750 Annunciator</div>
+		<div>{__pcbType}</div>
 	</div>
 
 	<div class="row">
 		<div>Software Version</div>
-		<div>4.5</div>
+		<div>{__version}</div>
 	</div>
 
 	<div class="row">
 		<div>Software Checksum</div>
-		<div>0x567CF9</div>
+		<div>{__checksum}</div>
 	</div>
 
 	<div class="row">
 		<div>Software Date</div>
-		<div>11/05/2020</div>
+		<div>{__swDate}</div>
 	</div>
 </section>
+
+<!-- <h1>The count is {$count}</h1> -->
 
 <!-- <figure>
 	<img alt="Success Kid" src="{successkid}">

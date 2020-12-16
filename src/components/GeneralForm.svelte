@@ -1,12 +1,34 @@
 <script>
-    
+    import { store } from "../components/stores.js";
+    import { wr } from "../components/TwoWireComms.js";
 
-    export let serial;
-    export let baseAddr;
+    let __serial = $store.serial;
+    let __baseAddr = $store.baseAddr;
+    let __channelIndex = $store.channelIndex;
+    let __totalChannels = $store.totalChannels;
 
-    const handleSubmit = () => {
-        console.log(serial);
-        // console.log(name, beltColour, age, skills);
+    export let closeModal;
+
+    const handleSubmit = async () => {
+        try {
+            await wr.settings.serial({
+                addr: 255,
+                serial: __serial,
+            });
+            store.setSerial(__serial);
+
+            await wr.settings.baseSettings({
+                addr: 255,
+                baseAddr: __baseAddr,
+                channelIndex: __channelIndex,
+                totalChannels: __totalChannels,
+            });
+            store.setBaseAddr(__baseAddr);
+        } catch (e) {
+            console.log(e);
+        }
+
+        closeModal();
     };
 </script>
 
@@ -57,9 +79,9 @@
 <form on:submit|preventDefault={handleSubmit}>
     <div class="inputs">
         <div>Serial</div>
-        <input type="number" bind:value={serial} />
+        <input type="number" bind:value={__serial} />
         <div>Base Address</div>
-        <input type="number" bind:value={baseAddr} />
+        <input type="number" bind:value={__baseAddr} />
     </div>
 
     <br />
