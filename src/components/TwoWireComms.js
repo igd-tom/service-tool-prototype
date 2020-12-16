@@ -8,33 +8,6 @@ function uuidv4() {
 
 
 
-// websocket logic
-
-var gateway = "ws://localhost:8080";
-var websocket;
-
-
-function onOpen(event) {
-    console.log('Connection opened');
-    twHandler.init();
-
-}
-
-function onClose(event) {
-    console.log('Connection closed');
-    setTimeout(initWebSocket, 2000);
-}
-function onMessage(event) {
-    console.log(event);
-}
-
-function init() {
-    console.log('Trying to open a WebSocket connection...');
-    websocket = new WebSocket(gateway);
-    websocket.onopen = onOpen;
-    websocket.onclose = onClose;
-    websocket.onmessage = twHandler.onMsgArrived;
-}
 
 
 
@@ -43,9 +16,34 @@ function init() {
 
 const twHandler = {
 
+
     queuedMsgs: [],
     sentMsgs: [],
     busy: false,
+
+
+    // finds matching sent message and then removes from sent messages
+    onMsgArrived: function (rxMsg) {
+
+        let idMatch = 0;
+        let rxMsgData = JSON.parse(rxMsg.data);
+
+        this.sentMsgs.forEach(function (item, index) {
+            if (item.id === rxMsgData.id) {
+                item.success(rxMsgData);
+                idMatch = item.id;
+            }
+        });
+
+        // removes matching sent message
+        this.sentMsgs = this.sentMsgs.filter(msg => msg.id !== idMatch)
+
+        //	automatically fetches next message and sends
+        if (this.queuedMsgs.length != 0) {
+            this.sendNextMessage();
+        }
+    },
+
 
 
     init: function () {
@@ -55,12 +53,12 @@ const twHandler = {
 
             let now = Date.now();
 
-            // calls msg fail method on expired messages
-            for (const msg in this.sentMsgs) {
-                if (msg.msg.timestamp - now > 5000) {
-                    msg.fail("No response received, expired: ", msg);
+            this.sentMsgs.forEach(function (item, index) {
+                if (item.timestamp - now > 5000) {
+                    item.fail("No response received, expired: ", item);
                 }
-            }
+            });
+
 
             // removes expired messages
             this.sentMsgs = this.sentMsgs.filter(msg => msg.timestamp - now < 5000);
@@ -70,12 +68,14 @@ const twHandler = {
 
     queueMsg: function (msg) {
 
-        // sends next message
-        this.sendNextMsg();
-
         // returns promise
         return new Promise((resolve, reject) => {
-            this.queuedMsgs.push({ id: uuidv4(), timestamp: -1, msg: msg, success: (resp) => { resolve(resp) }, fail: (e) => { reject(e) } })
+            this.queuedMsgs.push({
+                id: uuidv4(), timestamp: -1, msg: msg, success: (resp) => { resolve(resp) }, fail: (e) => { reject(e) }
+            })
+
+            // sends next message
+            this.sendNextMsg();
         })
 
 
@@ -84,12 +84,11 @@ const twHandler = {
 
     // sends message if !busy
     sendNextMsg: function () {
+
         if (this.queuedMsgs.length && !this.busy) {
 
             this.busy = true;
             let nextMsg = this.queuedMsgs.shift();
-
-            console.log(nextMsg)
 
             websocket.send(JSON.stringify(
                 {
@@ -107,38 +106,9 @@ const twHandler = {
             this.sentMsgs.push(nextMsg);
             this.busy = false;
         }
-    },
+    }
 
-    // finds matching sent message and then removes from sent messages
-    onMsgArrived: function (rxMsg) {
-
-        let idMatch = 0;
-        let rxMsgData = JSON.parse(rxMsg.data);
-
-        // calls msg success method
-        for (const msg in this.sentMsgs) {
-            if (msg.msg.id === rxMsgData.id) {
-                msg.success(rxMsgData);
-                idMatch = msg.msg.id;
-            }
-        }
-
-        // removes matching sent message
-        this.sentMsgs = this.sentMsgs.filter(msg => msg.id !== idMatch)
-
-
-        //	automatically fetches next message and sends
-        if (this.queuedMessages.length != 0) {
-            this.sendNextMessage();
-        }
-
-    },
-
-
-
-
-
-}
+};
 
 
 
@@ -149,34 +119,84 @@ export { init, rd };
 
 
 
-
-
-
-
-
 // tw comms 
+
+
+function convert3BytesToUint24(n1, n2, n3) {
+
+    let nReturn = 0;
+    let nTemp;
+
+    nReturn |= (n3 << 16);
+    nTemp = n2;
+    nTemp = (nTemp << 8) & 0x00FF00;
+    nReturn |= nTemp;
+    nReturn |= (n1 & 0x0000FF);
+
+    return nReturn;
+}
+
 
 
 
 
 const rd = {
     settings: {
-        serial: function () {
-            console.log("read serial");
+        serial: async function () {
 
-            twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": 255, "cmd": 21, "d1": 3, "d2": 0, "d3": 0, "d4": 0 })
-                .then(res => console.log("success", res))
-                .catch(e => console.log(e))
+            let res = await twHandler.queueMsg({ "maxTries": 3, "timeout": 100, "addr": 255, "cmd": 21, "d1": 7, "d2": 0, "d3": 0, "d4": 0 });
 
+            if (res.twResCode != 0) {
+                throw "Invalid tw resp: ", res;
+            }
 
-            return "123";
+            return convert3BytesToUint24(res.payload.d1, res.payload.d2, res.payload.d3)
         }
     }
 };
 
 
-// rd.settings.serial();
+async function init() {
+    await initWs();
+    twHandler.init()
+}
 
+
+
+
+
+
+// websocket logic
+
+var gateway = "ws://localhost:8080";
+var websocket;
+
+
+function onWsClose(event) {
+    console.log('Connection closed');
+    setTimeout(initWebSocket, 2000);
+}
+
+function onMsg(evnt) {
+    twHandler.onMsgArrived(evnt);
+}
+
+
+function initWs() {
+    console.log('Trying to open a WebSocket connection...');
+    websocket = new WebSocket(gateway);
+    // websocket.onopen = onWsOpen;
+    websocket.onclose = onWsClose;
+    websocket.onmessage = onMsg;
+
+
+    // returns promise
+    return new Promise((resolve, reject) => {
+        websocket.onopen = (evnt) => {
+            resolve(evnt);
+        }
+    })
+}
 
 
 

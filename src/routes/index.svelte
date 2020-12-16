@@ -11,10 +11,10 @@
 	let displayModal = false;
 	let modalType = "general";
 
-	onMount(() => {
+	onMount(async () => {
 		baseAddr = 5;
-		init();
-		serial = rd.settings.serial();
+		await init();
+		serial = await rd.settings.serial();
 	});
 
 	let closeModal = () => {
