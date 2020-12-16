@@ -4,7 +4,7 @@
 	"name": "service tool prototype1",
 	"short_name": "prototype",
 	"display": "minimal-ui",
-	"start_url": "/",
+	"start_url": "/service-tool-prototype",
 	"icons": [
 		{
 			"src": "logo-192.png",
