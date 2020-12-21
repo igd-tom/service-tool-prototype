@@ -18,41 +18,25 @@
 	let __modalType = "general";
 
 	onMount(async () => {
-		try {
-			await init();
+		await init();
 
-			// for (let i = 0; i < 100; i++) {
-			// 	try {
-			// 		let serial = await rd.settings.serial({ addr: 255 });
+		let serial = await rd.settings.serial({ addr: 255 })
+		store.setSerial(serial);
 
-			// 		console.log(serial);
-			// 	} catch (e) {
-			// 		console.log("e:", e);
-			// 		break;
-			// 	}
-			// }
+		let baseSettings = await rd.settings.baseSettings({ addr: 255 });
+		store.setBaseAddr(baseSettings.baseAddr);
+		store.setChannelIndex(baseSettings.channelIndex);
+		store.setTotalChannels(baseSettings.totalChannels);
 
-			let serial = await rd.settings.serial({ addr: 255 });
+		let pcbType = await rd.settings.pcbType({ addr: 255 });
+		__pcbType = pcbType.pcbType;
 
-			store.setSerial(serial);
+		let program = await rd.version.program({ addr: 255 });
+		__version = program.version;
+		__checksum = program.checksum;
 
-			let baseSettings = await rd.settings.baseSettings({ addr: 255 });
-			store.setBaseAddr(baseSettings.baseAddr);
-			store.setChannelIndex(baseSettings.channelIndex);
-			store.setTotalChannels(baseSettings.totalChannels);
-
-			let pcbType = await rd.settings.pcbType({ addr: 255 });
-			__pcbType = pcbType.pcbType;
-
-			let program = await rd.version.program({ addr: 255 });
-			__version = program.version;
-			__checksum = program.checksum;
-
-			let progDate = await rd.version.programDate({ addr: 255 });
-			__swDate = progDate;
-		} catch (e) {
-			console.log("error: ", e);
-		}
+		let progDate = await rd.version.programDate({ addr: 255 });
+		__swDate = progDate;
 	});
 
 	let closeModal = () => {
