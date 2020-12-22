@@ -20,23 +20,29 @@
 	onMount(async () => {
 		await init();
 
-		let serial = await rd.settings.serial({ addr: 255 })
-		store.setSerial(serial);
+		try {
+			let serial = await rd.settings.serial({ addr: 255 });
+			store.setSerial(serial);
 
-		let baseSettings = await rd.settings.baseSettings({ addr: 255 });
-		store.setBaseAddr(baseSettings.baseAddr);
-		store.setChannelIndex(baseSettings.channelIndex);
-		store.setTotalChannels(baseSettings.totalChannels);
+			console.log(serial);
 
-		let pcbType = await rd.settings.pcbType({ addr: 255 });
-		__pcbType = pcbType.pcbType;
+			let baseSettings = await rd.settings.baseSettings({ addr: 255 });
+			store.setBaseAddr(baseSettings.baseAddr);
+			store.setChannelIndex(baseSettings.channelIndex);
+			store.setTotalChannels(baseSettings.totalChannels);
 
-		let program = await rd.version.program({ addr: 255 });
-		__version = program.version;
-		__checksum = program.checksum;
+			let pcbType = await rd.settings.pcbType({ addr: 255 });
+			__pcbType = pcbType.pcbType;
 
-		let progDate = await rd.version.programDate({ addr: 255 });
-		__swDate = progDate;
+			let program = await rd.version.program({ addr: 255 });
+			__version = program.version;
+			__checksum = program.checksum;
+
+			let progDate = await rd.version.programDate({ addr: 255 });
+			__swDate = progDate;
+		} catch (e) {
+			console.log(e);
+		}
 	});
 
 	let closeModal = () => {
